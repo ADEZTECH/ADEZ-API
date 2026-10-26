@@ -1,17 +1,25 @@
-# Node.js Express API starter
+# ADEZ-API
 
-This project is a lightweight API scaffold for ADEZ-API.
+A complete Node.js + Express project for ADEZ API with a working landing page and contact page.
 
 ## Features
-- Express server setup
-- Health endpoint
-- Error handling middleware
-- Environment-based configuration
+- Express backend
+- Health and status APIs
+- Static landing page
+- Contact page
+- Responsive cyber-tech branding
+- Ready to run locally
 
-## Scripts
-- `npm install`
-- `npm run dev`
-- `npm start`
+## Run the project
+```bash
+npm install
+npm run dev
+```
+
+Then open:
+- http://localhost:3000/
+- http://localhost:3000/contact
+- http://localhost:3000/api/health
 
 ## Project structure
 ```text
@@ -25,7 +33,9 @@ src/
     notFound.js
   routes/
     index.js
+public/
+  index.html
+  contact.html
+  styles.css
+  script.js
 ```
-
-## Environment
-Copy `.env.example` to `.env` and set your values.
