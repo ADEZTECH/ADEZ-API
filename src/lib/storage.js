@@ -6,23 +6,15 @@ let databaseType = 'memory';
 let mongoClient = null;
 let mongoDb = null;
 let pgClient = null;
+let isDbReady = false;
 
 async function connectDatabase() {
-  if (process.env.MONGODB_URI) {
-    try {
-      mongoClient = new MongoClient(process.env.MONGODB_URI);
-      await mongoClient.connect();
-      mongoDb = mongoClient.db(process.env.MONGODB_DB || 'adezapi');
-      databaseType = 'mongo';
-      return { type: 'mongo', db: mongoDb };
-    } catch (error) {
-      console.warn('MongoDB connection failed, falling back to memory store:', error.message);
-    }
-  }
+  const mongoUri = process.env.MONGODB_URI;
+  const pgUrl = process.env.DATABASE_URL;
 
-  if (process.env.DATABASE_URL) {
+  if (pgUrl) {
     try {
-      pgClient = new Client({ connectionString: process.env.DATABASE_URL });
+      pgClient = new Client({ connectionString: pgUrl });
       await pgClient.connect();
       await pgClient.query(`
         CREATE TABLE IF NOT EXISTS users (
@@ -34,31 +26,41 @@ async function connectDatabase() {
         )
       `);
       databaseType = 'postgres';
+      isDbReady = true;
       return { type: 'postgres', client: pgClient };
     } catch (error) {
-      console.warn('PostgreSQL connection failed, falling back to memory store:', error.message);
+      console.warn('PostgreSQL connection failed:', error.message);
+    }
+  }
+
+  if (mongoUri) {
+    try {
+      mongoClient = new MongoClient(mongoUri);
+      await mongoClient.connect();
+      mongoDb = mongoClient.db(process.env.MONGODB_DB || 'adezapi');
+      databaseType = 'mongo';
+      isDbReady = true;
+      return { type: 'mongo', db: mongoDb };
+    } catch (error) {
+      console.warn('MongoDB connection failed:', error.message);
     }
   }
 
   databaseType = 'memory';
+  isDbReady = true;
   return { type: 'memory' };
 }
 
 async function ensureDatabaseReady() {
-  if (databaseType === 'memory' && process.env.MONGODB_URI === undefined && process.env.DATABASE_URL === undefined) {
-    return { type: 'memory' };
+  if (isDbReady) {
+    return { type: databaseType };
   }
 
-  if (databaseType === 'memory') {
-    return connectDatabase();
-  }
-
-  return { type: databaseType };
+  return connectDatabase();
 }
 
 async function findUserByEmail(email) {
   const normalizedEmail = String(email || '').toLowerCase();
-
   if (!normalizedEmail) return null;
 
   await ensureDatabaseReady();

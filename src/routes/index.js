@@ -2,6 +2,7 @@ const express = require('express');
 const { getHealthStatus } = require('../controllers/healthController');
 const { registerUser, loginUser, authenticateToken } = require('../lib/auth');
 const { generateAIResponse } = require('../lib/ai');
+const { verifyWhatsAppSignature } = require('../lib/whatsapp');
 
 const router = express.Router();
 
@@ -33,9 +34,9 @@ router.post('/auth/register', async (req, res, next) => {
     }
 
     const result = await registerUser({ name, email, password });
-    res.status(201).json(result);
+    return res.status(201).json(result);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -48,17 +49,14 @@ router.post('/auth/login', async (req, res, next) => {
     }
 
     const result = await loginUser({ email, password });
-    res.json(result);
+    return res.json(result);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 router.get('/me', authenticateToken, (req, res) => {
-  res.json({
-    user: req.user,
-    authenticated: true
-  });
+  res.json({ user: req.user, authenticated: true });
 });
 
 router.post('/ai/chat', authenticateToken, async (req, res, next) => {
@@ -69,14 +67,14 @@ router.post('/ai/chat', authenticateToken, async (req, res, next) => {
       context: 'ADEZ API is a gateway for AI, WhatsApp, and developer APIs for the African market.'
     });
 
-    res.json({
+    return res.json({
       success: true,
       provider: aiResult.provider,
       response: aiResult.response,
       prompt
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -84,7 +82,6 @@ router.get('/webhooks/whatsapp', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
-
   const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'adez-whatsapp-token';
 
   if (mode === 'subscribe' && token === verifyToken) {
@@ -96,18 +93,10 @@ router.get('/webhooks/whatsapp', (req, res) => {
 
 router.post('/webhooks/whatsapp', (req, res) => {
   const signature = req.headers['x-hub-signature-256'];
-  const expectedSecret = process.env.WHATSAPP_APP_SECRET || 'adez-whatsapp-secret';
+  const secret = process.env.WHATSAPP_APP_SECRET || 'adez-whatsapp-secret';
 
-  if (process.env.WHATSAPP_APP_SECRET) {
-    const crypto = require('crypto');
-    const computed = 'sha256=' + crypto
-      .createHmac('sha256', expectedSecret)
-      .update(JSON.stringify(req.body))
-      .digest('hex');
-
-    if (signature !== computed) {
-      return res.status(403).json({ message: 'Invalid signature.' });
-    }
+  if (!verifyWhatsAppSignature(secret, req.body, signature)) {
+    return res.status(403).json({ message: 'Invalid WhatsApp signature.' });
   }
 
   const data = req.body || {};
@@ -116,15 +105,13 @@ router.post('/webhooks/whatsapp', (req, res) => {
   entries.forEach((entry) => {
     (entry.changes || []).forEach((change) => {
       const value = change.value || {};
-      const messages = value.messages || [];
-
-      messages.forEach((message) => {
+      (value.messages || []).forEach((message) => {
         console.log('WhatsApp message received:', message);
       });
     });
   });
 
-  res.status(200).json({ status: 'received' });
+  return res.status(200).json({ status: 'received' });
 });
 
 module.exports = router;

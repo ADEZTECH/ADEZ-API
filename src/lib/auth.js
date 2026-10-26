@@ -6,7 +6,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'adez-change-me-in-production';
 
 function sanitizeUser(user) {
   if (!user) return null;
-
   const { password, ...safeUser } = user;
   return safeUser;
 }
@@ -19,15 +18,19 @@ function signToken(user) {
       name: user.name
     },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '7d', issuer: 'adez-api' }
   );
+}
+
+function validatePassword(password) {
+  return typeof password === 'string' && password.length >= 8;
 }
 
 async function registerUser({ name, email, password }) {
   const normalizedEmail = String(email || '').toLowerCase();
 
-  if (!normalizedEmail || !password) {
-    throw new Error('Email and password are required.');
+  if (!normalizedEmail || !validatePassword(password)) {
+    throw new Error('A valid email and password of at least 8 characters are required.');
   }
 
   const existingUser = await findUserByEmail(normalizedEmail);
@@ -35,18 +38,16 @@ async function registerUser({ name, email, password }) {
     throw new Error('User already exists.');
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 12);
   const user = await createUser({
     name: name || 'User',
     email: normalizedEmail,
     password: passwordHash
   });
 
-  const token = signToken(user);
-
   return {
     user: sanitizeUser(user),
-    token
+    token: signToken(user)
   };
 }
 
@@ -73,7 +74,10 @@ function authenticateToken(req, res, next) {
   }
 
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, JWT_SECRET, {
+      issuer: 'adez-api',
+      algorithms: ['HS256']
+    });
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Invalid or expired token.' });
@@ -84,5 +88,6 @@ module.exports = {
   registerUser,
   loginUser,
   authenticateToken,
-  signToken
+  signToken,
+  validatePassword
 };

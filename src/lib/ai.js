@@ -7,15 +7,17 @@ async function generateAIResponse({ prompt, context = '' }) {
     throw new Error('A prompt is required.');
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
     return {
       provider: 'demo',
-      response: `Demo response: ${normalizedPrompt}. ADEZ API can power AI applications, WhatsApp automation, and developer infrastructure for African innovation.`
+      response: `${normalizedPrompt} — ADEZ API can power AI workflows, WhatsApp automation, and developer infrastructure for African innovation.`
     };
   }
 
   try {
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = new OpenAI({ apiKey });
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
     const completion = await client.chat.completions.create({
@@ -30,7 +32,8 @@ async function generateAIResponse({ prompt, context = '' }) {
           content: normalizedPrompt
         }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 400
     });
 
     const content = completion.choices?.[0]?.message?.content;
@@ -40,6 +43,7 @@ async function generateAIResponse({ prompt, context = '' }) {
       response: content || 'No response generated.'
     };
   } catch (error) {
+    console.error('OpenAI request failed:', error.message);
     return {
       provider: 'demo-fallback',
       response: `AI provider is unavailable right now. Here is a local fallback for: ${normalizedPrompt}`
