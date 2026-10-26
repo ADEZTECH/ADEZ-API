@@ -4,18 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ADEZ Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
-    <header class="site-header">
+  <body class="theme-dark">
+    <header class="site-header compact-header">
       <nav class="nav container">
-        <div class="brand">ADEZ</div>
+        <div class="brand-wrap">
+          <div class="brand-mark">A</div>
+          <div class="brand-copy">
+            <div class="brand-name">ADEZ<span>API</span></div>
+            <div class="brand-tag">Powered by ADEZ TECH</div>
+          </div>
+        </div>
+
         <div class="nav-links">
           <a href="/">Home</a>
           <a href="/dashboard">Dashboard</a>
           <a href="/contact">Contact</a>
           <a href="/login">Login</a>
         </div>
+
+        <a href="/login" class="btn btn-primary">Open Portal</a>
       </nav>
     </header>
 
@@ -24,32 +36,39 @@
         <div>
           <p class="eyebrow">Overview</p>
           <h1>Welcome to your dashboard</h1>
-          <p>This is a separate page served at /dashboard.</p>
+          <p>This is a dedicated control center for your ADEZ API operations.</p>
+        </div>
+        <div class="hero-actions-inline">
+          <a href="/login" class="btn btn-primary">Go to login</a>
+          <a href="/contact" class="btn btn-outline">Contact sales</a>
         </div>
       </section>
 
       <section class="stats-grid">
         <article class="stat-card">
-          <h3>Users</h3>
+          <h3>Active Users</h3>
           <p class="big-number">1,284</p>
+          <span>+12.8% this month</span>
         </article>
         <article class="stat-card">
-          <h3>Revenue</h3>
+          <h3>Monthly Revenue</h3>
           <p class="big-number">$24.6K</p>
+          <span>+8.4% growth</span>
         </article>
         <article class="stat-card">
-          <h3>Orders</h3>
-          <p class="big-number">412</p>
+          <h3>API Calls</h3>
+          <p class="big-number">412K</p>
+          <span>99.9% uptime</span>
         </article>
       </section>
 
       <section class="panel">
         <h2>Recent Activity</h2>
         <ul class="activity-list">
-          <li>New signup from Lagos</li>
-          <li>API key rotated successfully</li>
-          <li>Payment received from enterprise client</li>
-          <li>System uptime is 99.9%</li>
+          <li>New signup from Nairobi</li>
+          <li>WhatsApp webhook successfully synchronized</li>
+          <li>AI studio request completed in 2.4s</li>
+          <li>System health remains above SLA target</li>
         </ul>
       </section>
     </main>
